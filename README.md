@@ -10,6 +10,14 @@ tested with GNU Fortran 11.2.0, modify `Makefile` to mix it up. this is actually
 
 the data set files should have as the first line `# N M`, where N indicates how many data points there are, and M indicates how many components each data point has. this first line is then followed by the data itself, which should just be a N by M table of numbers. for example, in python, `numpy.loadtxt()` should be able to parse the data and result in an array with shape `(N, M)`.
 
+for the example data, try the following:
+
+`select_data cube.dat 8 10 > output`
+
+`add_data cube.dat candidates.dat 6 50 > output`
+
+for more about the example data, see `doc/main.pdf`.
+
 # output
 
 the first few lines of output will echo how the program parsed your inputs. check these lines to ensure that you are getting what you really want. once annealing begins, the total energy and acceptance rate at each temperature is printed out.
