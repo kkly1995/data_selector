@@ -2,23 +2,34 @@ module tables
 
     implicit none
 
+    real, parameter     :: large_number = 10000, small_number = 0.00001
+
     contains
 
         pure subroutine self_table(x, y)
             ! x is an array of size (M, N)
             ! representing N data points in M-dimensional space
             ! y is an array of size (N, N)
-            ! where y(i,j) represents the euclidean distance
+            ! where y(i,j) represents the RECIPROCAL of the euclidean distance
             ! between x(i) and x(j)
+            !
+            ! note: if x(i) and x(j) are sufficiently close,
+            ! their entry will be set to large_number
             real, intent(in)            :: x(:,:)
             real, intent(in out)        :: y(:,:)
             integer                     :: N, i, j
+            real                        :: r
 
             N = size(x, dim=2)
-            y = 0 ! just to be sure
+            y = 0
             do j = 1, N
-                do i = 1, j
-                    y(i,j) = norm2(x(:,i) - x(:,j))
+                do i = 1, j - 1
+                    r = norm2(x(:,i) - x(:,j))
+                    if (r > small_number) then
+                        y(i,j) = 1.0/r
+                    else
+                        y(i,j) = large_number
+                    end if
                     y(j,i) = y(i,j)
                 end do
             end do
@@ -29,17 +40,26 @@ module tables
             ! x has size (M, N)
             ! y has size (M, L), i.e. data has same dimension
             ! z has size (N, L) and will store the final table
-            ! z(i,j) represents distance between x(:,i) and y(:,j)
+            ! z(i,j) represents the reciprocal distance between x(:,i) and y(:,j)
+            !
+            ! again, these two points are suffciently close, 
+            ! their entry will be set to large_number
             real, intent(in)            :: x(:,:), y(:,:)
             real, intent(in out)        :: z(:,:)
             
             integer                     :: N, L, i, j
+            real                        :: r
 
             N = size(x, dim=2)
             L = size(y, dim=2)
             do i = 1, N
                 do j = 1, L
-                    z(i,j) = norm2(x(:,i) - y(:,j))
+                    r = norm2(x(:,i) - y(:,j))
+                    if (r > small_number) then
+                        z(i,j) = 1.0/r
+                    else
+                        z(i,j) = large_number
+                    end if
                 end do
             end do
         end subroutine cross_table
@@ -59,7 +79,7 @@ module tables
             N = size(x, dim=1)
             do i = 1, N
                 if (indices(i)) then
-                    E = E - sum(x(:,i), mask=indices)
+                    E = E + sum(x(:,i), mask=indices)
                 end if
             end do
             E = 0.5*E
@@ -89,12 +109,12 @@ module tables
             E = 0
             do i = 1, L
                 if (indices(i)) then
-                    E = E - sum(x(:,i), mask=indices)
+                    E = E + sum(x(:,i), mask=indices)
                 end if
             end do
             E = 0.5*E
             do i = 1, N
-                E = E - sum(y(i,:), mask=indices)
+                E = E + sum(y(i,:), mask=indices)
                 ! getting y(i,:) instead of y(:,i) is obviously slower
                 ! but this routine is only called a few times
                 ! whereas change_in_energy, which will grab y(:,i)
@@ -112,9 +132,9 @@ module tables
             logical, intent(in) :: indices(:)
             real                :: dE
 
-            dE = sum(x(:,i), mask=indices)
-            dE = dE - sum(x(:,j), mask=indices)
-            dE = dE + x(i,j)
+            dE = -sum(x(:,i), mask=indices)
+            dE = dE + sum(x(:,j), mask=indices)
+            dE = dE - x(i,j)
         end function change_in_self_energy
 
         pure function change_in_energy(x, y, i, j, indices) result(dE)
@@ -133,9 +153,9 @@ module tables
             logical, intent(in) :: indices(:)
             real                :: dE
 
-            dE = sum(x(:,i), mask=indices) + sum(y(:,i))
-            dE = dE - sum(x(:,j), mask=indices) - sum(y(:,j))
-            dE = dE + x(i,j)
+            dE = -sum(x(:,i), mask=indices) - sum(y(:,i))
+            dE = dE + sum(x(:,j), mask=indices) + sum(y(:,j))
+            dE = dE - x(i,j)
         end function change_in_energy
 
 end module tables
