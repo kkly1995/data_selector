@@ -49,7 +49,7 @@ module misc
             randrange = randrange + 1
         end function randrange
 
-        pure subroutine standard_scale(x, y)
+        subroutine standard_scale(x, y)
             ! rescales data x so that it has mean 0 and variance 1
             ! the rescaled data is placed into y
             real, intent(in)            :: x(:,:)
@@ -64,6 +64,7 @@ module misc
             allocate(dx(N))
 
             ! do each dimension one by one
+            !$OMP PARALLEL DO SHARED(y) PRIVATE(mean, dx, std)
             do i = 1, M
                 mean = sum(x(i,:)) / N
                 dx = x(i,:) - mean
@@ -71,6 +72,7 @@ module misc
                 std = sqrt(std)
                 y(i,:) = (x(i,:) - mean) / std
             end do
+            !$OMP END PARALLEL DO
 
         end subroutine standard_scale
     

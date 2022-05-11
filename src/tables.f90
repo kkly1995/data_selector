@@ -6,7 +6,7 @@ module tables
 
     contains
 
-        pure subroutine self_table(x, y)
+        subroutine self_table(x, y)
             ! x is an array of size (M, N)
             ! representing N data points in M-dimensional space
             ! y is an array of size (N, N)
@@ -22,6 +22,7 @@ module tables
 
             N = size(x, dim=2)
             y = 0
+            !$omp parallel do shared(y) private(i, r)
             do j = 1, N
                 do i = 1, j - 1
                     r = norm2(x(:,i) - x(:,j))
@@ -33,9 +34,10 @@ module tables
                     y(j,i) = y(i,j)
                 end do
             end do
+            !$omp end parallel do
         end subroutine self_table
 
-        pure subroutine cross_table(x, y, z)
+        subroutine cross_table(x, y, z)
             ! computes distances between two sets of data points x and y
             ! x has size (M, N)
             ! y has size (M, L), i.e. data has same dimension
@@ -52,6 +54,7 @@ module tables
 
             N = size(x, dim=2)
             L = size(y, dim=2)
+            !$omp parallel do shared(z) private(j, r)
             do i = 1, N
                 do j = 1, L
                     r = norm2(x(:,i) - y(:,j))
@@ -62,9 +65,10 @@ module tables
                     end if
                 end do
             end do
+            !$omp end parallel do
         end subroutine cross_table
 
-        pure function total_self_energy(x, indices) result(E)
+        function total_self_energy(x, indices) result(E)
             ! calculates total energy for a selected set of data points
             ! x is the table of distances, having size (N, N)
             ! indices is a mask indicating which points are selected,
@@ -77,15 +81,17 @@ module tables
             
             E = 0
             N = size(x, dim=1)
+            !$omp parallel do reduction(+:E)
             do i = 1, N
                 if (indices(i)) then
                     E = E + sum(x(:,i), mask=indices)
                 end if
             end do
+            !$omp end parallel do
             E = 0.5*E
         end function total_self_energy
 
-        pure function total_energy(x, y, indices) result(E)
+        function total_energy(x, y, indices) result(E)
             ! calculates total energy
             ! for a fixed data set + candidate data set
             ! i.e. x is a table of self distances for the candidate set
@@ -107,12 +113,15 @@ module tables
             N = size(y, dim=1)
             
             E = 0
+            !$omp parallel do reduction (+:E)
             do i = 1, L
                 if (indices(i)) then
                     E = E + sum(x(:,i), mask=indices)
                 end if
             end do
+            !$omp end parallel do
             E = 0.5*E
+            !$omp parallel do reduction (+:E)
             do i = 1, N
                 E = E + sum(y(i,:), mask=indices)
                 ! getting y(i,:) instead of y(:,i) is obviously slower
@@ -120,9 +129,10 @@ module tables
                 ! whereas change_in_energy, which will grab y(:,i)
                 ! will be called many times
             end do
+            !$omp end parallel do
         end function total_energy
 
-        pure function change_in_self_energy(x, i, j, indices) result(dE)
+        function change_in_self_energy(x, i, j, indices) result(dE)
             ! calculates the change in energy if index i is removed
             ! and j is added
             ! indices is the current mask
@@ -134,6 +144,14 @@ module tables
 
             dE = -sum(x(:,i), mask=indices)
             dE = dE + sum(x(:,j), mask=indices)
+            ! omp is slower here :( maybe bc of the mask
+!            N = size(x, dim=1)
+!            dE = 0
+!            !$omp parallel do reduction (+:dE)
+!            do k = 1, N
+!                if (indices(k)) dE = dE - x(k,i) + x(k,j)
+!            end do
+!            !$omp end parallel do
             dE = dE - x(i,j)
         end function change_in_self_energy
 
