@@ -144,14 +144,13 @@ module tables
 
             dE = -sum(x(:,i), mask=indices)
             dE = dE + sum(x(:,j), mask=indices)
-            ! omp is slower here :( maybe bc of the mask
 !            N = size(x, dim=1)
 !            dE = 0
-!            !$omp parallel do reduction (+:dE)
+!            !$omp simd reduction (+:dE)
 !            do k = 1, N
 !                if (indices(k)) dE = dE - x(k,i) + x(k,j)
 !            end do
-!            !$omp end parallel do
+!            !$omp end simd
             dE = dE - x(i,j)
         end function change_in_self_energy
 

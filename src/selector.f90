@@ -12,6 +12,7 @@ program selector
         i_remove, i_add, placeholder
     real                        :: temperature, energy, acceptance_rate, &
         dE, probability, dT
+    real                        :: time_start, time_finish
 
     call get_command_argument(1, fname)
     call read_data(trim(fname), candidate)
@@ -19,6 +20,8 @@ program selector
     read(dummy, *) number_to_select
     call get_command_argument(3, dummy)
     read(dummy, *) temperature
+
+    call cpu_time(time_start)
 
     ! can now allocate and calculate
     M = size(candidate, dim=1)
@@ -49,8 +52,13 @@ program selector
     energy = total_self_energy(distance, selected_mask)
     print *, 'initial energy: ', energy
 
+    call cpu_time(time_finish)
+    print *, 'initialization time: ', time_finish - time_start, 's'
+
     ! fixed: cooling in 1000 steps, 10*N samples at each temp
     dT = temperature / 1000
+
+    call cpu_time(time_start)
 
     print *, 'begin annealing at temperature', temperature
     cooling: do i = 1, 1000
@@ -77,6 +85,9 @@ program selector
         temperature = temperature - dT
     end do cooling
     print *, 'done annealing!'
+
+    call cpu_time(time_finish)
+    print *, 'annealing time: ', time_finish - time_start, 's'
 
     ! final sanity check
     print *, 'quick sanity check...'
