@@ -3,6 +3,8 @@ module misc
 
     implicit none
 
+    integer, parameter  :: dp = kind(0.d0) ! double precision
+
     contains
 
         subroutine read_data(fname, x)
@@ -10,11 +12,11 @@ module misc
             ! i.e. the size of x will be determined directly from file
             ! file is a table of number, where the first line is
             ! '# N M', indicating a N by M table of numbers
-            character(*), intent(in)            :: fname
-            real, allocatable, intent(in out)   :: x(:,:)
-            integer                             :: fileunit, N, M, total
-            character(len=1)                    :: hashtag
-            integer                             :: exit_status
+            character(*), intent(in)                    :: fname
+            real(dp), allocatable, intent(in out)       :: x(:,:)
+            integer                                     :: fileunit, N, M, total
+            character(len=1)                            :: hashtag
+            integer                                     :: exit_status
 
             open(newunit=fileunit, file=fname)
 
@@ -52,11 +54,11 @@ module misc
         subroutine standard_scale(x, y)
             ! rescales data x so that it has mean 0 and variance 1
             ! the rescaled data is placed into y
-            real, intent(in)            :: x(:,:)
-            real, intent(in out)        :: y(:,:)
+            real(dp), intent(in)        :: x(:,:)
+            real(dp), intent(in out)    :: y(:,:)
 
-            real                        :: mean, std
-            real, allocatable           :: dx(:)
+            real(dp)                    :: mean, std
+            real(dp), allocatable       :: dx(:)
             integer                     :: M, N, i
 
             M = size(x, dim=1)

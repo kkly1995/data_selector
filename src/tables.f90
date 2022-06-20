@@ -1,8 +1,9 @@
 module tables
 
+    use misc, only: dp
     implicit none
 
-    real, parameter     :: large_number = 10000, small_number = 0.00001
+    real(dp), parameter :: large_number = 10000.0_dp, small_number = 0.00001_dp
 
     contains
 
@@ -15,10 +16,10 @@ module tables
             !
             ! note: if x(i) and x(j) are sufficiently close,
             ! their entry will be set to large_number
-            real, intent(in)            :: x(:,:)
-            real, intent(in out)        :: y(:,:)
+            real(dp), intent(in)        :: x(:,:)
+            real(dp), intent(in out)    :: y(:,:)
             integer                     :: N, i, j
-            real                        :: r
+            real(dp)                    :: r
 
             N = size(x, dim=2)
             y = 0
@@ -27,7 +28,7 @@ module tables
                 do i = 1, j - 1
                     r = norm2(x(:,i) - x(:,j))
                     if (r > small_number) then
-                        y(i,j) = 1.0/r
+                        y(i,j) = 1.0_dp / r
                     else
                         y(i,j) = large_number
                     end if
@@ -46,11 +47,11 @@ module tables
             !
             ! again, these two points are suffciently close, 
             ! their entry will be set to large_number
-            real, intent(in)            :: x(:,:), y(:,:)
-            real, intent(in out)        :: z(:,:)
+            real(dp), intent(in)        :: x(:,:), y(:,:)
+            real(dp), intent(in out)    :: z(:,:)
             
             integer                     :: N, L, i, j
-            real                        :: r
+            real(dp)                    :: r
 
             N = size(x, dim=2)
             L = size(y, dim=2)
@@ -59,7 +60,7 @@ module tables
                 do j = 1, L
                     r = norm2(x(:,i) - y(:,j))
                     if (r > small_number) then
-                        z(i,j) = 1.0/r
+                        z(i,j) = 1.0_dp / r
                     else
                         z(i,j) = large_number
                     end if
@@ -73,9 +74,9 @@ module tables
             ! x is the table of distances, having size (N, N)
             ! indices is a mask indicating which points are selected,
             ! having size N
-            real, intent(in)    :: x(:,:)
+            real(dp), intent(in):: x(:,:)
             logical, intent(in) :: indices(:)
-            real                :: E
+            real(dp)            :: E
 
             integer             :: i, N
             
@@ -88,7 +89,7 @@ module tables
                 end if
             end do
             !$omp end parallel do
-            E = 0.5*E
+            E = 0.5_dp * E
         end function total_self_energy
 
         function total_energy(x, y, indices) result(E)
@@ -103,9 +104,9 @@ module tables
             ! and y will have size (N,L)
             ! i.e. cross_table should be called s.t. dim 1 of the cross table
             ! corresponds to the fixed set
-            real, intent(in)    :: x(:,:), y(:,:)
+            real(dp), intent(in):: x(:,:), y(:,:)
             logical, intent(in) :: indices(:)
-            real                :: E
+            real(dp)            :: E
 
             integer             :: N, L, i
 
@@ -120,7 +121,7 @@ module tables
                 end if
             end do
             !$omp end parallel do
-            E = 0.5*E
+            E = 0.5_dp * E
             !$omp parallel do reduction (+:E)
             do i = 1, N
                 E = E + sum(y(i,:), mask=indices)
@@ -137,10 +138,10 @@ module tables
             ! and j is added
             ! indices is the current mask
             ! i.e. indices(i) must be true and indices(j) must be false
-            real, intent(in)    :: x(:,:)
+            real(dp), intent(in):: x(:,:)
             integer, intent(in) :: i, j
             logical, intent(in) :: indices(:)
-            real                :: dE
+            real(dp)            :: dE
 
             dE = -sum(x(:,i), mask=indices)
             dE = dE + sum(x(:,j), mask=indices)
@@ -165,10 +166,10 @@ module tables
             ! again, the convention is that if there are L candidate points
             ! x should have size (L,L)
             ! and y should have size (N,L)
-            real, intent(in)    :: x(:,:), y(:,:)
+            real(dp), intent(in):: x(:,:), y(:,:)
             integer, intent(in) :: i, j
             logical, intent(in) :: indices(:)
-            real                :: dE
+            real(dp)            :: dE
 
             dE = -sum(x(:,i), mask=indices) - sum(y(:,i))
             dE = dE + sum(x(:,j), mask=indices) + sum(y(:,j))

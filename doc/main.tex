@@ -22,12 +22,10 @@ Let $X = \{ X_i \}_{i = 1}^{N} \subset \mathbb{R}^M$ be a set of $N$ data points
 Let $X_s \subset X$ be a subset of $n < N$ points, and define the ``energy'' of such a subset to be
 \begin{equation}
     \label{eq:energy}
-    E(X_s) \equiv -\frac{1}{2}\sum_{x_i, x_j \in X_s} (x_i - x_j)^2,
+    E(X_s) \equiv \frac{1}{2}\sum_{x_i, x_j \in X_s} \frac{1}{|x_i - x_j|},
 \end{equation}
-where the square is defined by the usual inner product.
-This energy is just minus the sum of squares of distances between every pair of data points.
+where $| \cdot |$ is the $l^2$ norm.
 Given a fixed $n$, we wish to select the subset $X_s$ which minimizes this energy.
-This amounts to selecting $n$ points from $X$ such that the sum of square distances among the data points is maximal.
 This is the problem that \texttt{select\_data} attempts to solve.
 
 Consider the following variation of the problem: suppose now that we have a \emph{fixed} data set $X$ and a set of \emph{candidates} $Y = \{ Y_i \}_{i = 1}^{L} \subset \mathbb{R}^M$.
@@ -56,16 +54,18 @@ This is to try and ensure that each component of the data contributes to the ene
 The datasets are never overwritten, and the final selected subset will be printed in their \emph{unnormalized} form.
 
 In both programs the annealing schedule is entirely fixed.
-The user must specify the initial temperature, which will be lowered to 0 in uniformly spaced steps.
+The user must specify the initial temperature, which will be lowered to 0 in 100 uniformly spaced steps.
 At each temperature, $10 N$ (\texttt{select\_data}) or $10 L$ (\texttt{add\_data}) exchanges are attempted.
 The two points to be exchanged are selected entirely at random from their respective sets.
-This means that, in all, $1000 \times 10 \times N$ (or $L$) exchanges are attempted.
+This means that, in all, $100 \times 10 \times N$ (or $L$) exchanges are attempted.
 This fixed schedule has been satisfactory for the limited use that the programs have seen thus far, but is open to change.
 
 At each temperature, the ``acceptance rate,'' or the fraction of the number of exchanges accepted, is printed.
 The appropriate choice of initial temperature depends primarily on the energy scales of the data.
 Typically, a good choice will result in an initial acceptance rate of $\sim 0.5$, and will only be zero for the last 10 or so temperatures.
 If the acceptance rate is too small to begin with, restart and try choosing a temperature an order of magnitude larger.
+For convenience, a short version of each program is given by \texttt{add\_short} and \texttt{select\_short}.
+These are effectively identical to their longer counterparts except that only the first temperature is done, and the acceptance rate will be printed.
 
 \section{Provided examples}
 

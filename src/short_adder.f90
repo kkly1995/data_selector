@@ -1,4 +1,4 @@
-program adder
+program short_adder
 
     use tables
     use misc
@@ -76,34 +76,30 @@ program adder
 
     call cpu_time(time_start)
 
-    print *, 'begin annealing at temperature', temperature
-    cooling: do i = 1, 100
-        acceptance_rate = 0
-        sampling: do j = 1, 10*L
-            i_remove = randrange(number_to_select)
-            i_add = randrange(L - number_to_select)
-            dE = change_in_energy(self_distance, cross_distance, &
-                selected(i_remove), not_selected(i_add), selected_mask)
-            call random_number(probability)
-            if (probability < exp(-dE / temperature)) then
-                ! accept and perform the swap
-                placeholder = selected(i_remove)
-                selected(i_remove) = not_selected(i_add)
-                not_selected(i_add) = placeholder
-                ! update mask
-                selected_mask(selected(i_remove)) = .true.
-                selected_mask(not_selected(i_add)) = .false.
-                energy = energy + dE
-                acceptance_rate = acceptance_rate + 1
-            end if
-        end do sampling
-        print *, temperature, energy, acceptance_rate/(10*L)
-        temperature = temperature - dT
-    end do cooling
-    print *, 'done annealing!'
+    print *, 'sampling at temperature', temperature
+    sampling: do j = 1, 10*L
+        i_remove = randrange(number_to_select)
+        i_add = randrange(L - number_to_select)
+        dE = change_in_energy(self_distance, cross_distance, &
+            selected(i_remove), not_selected(i_add), selected_mask)
+        call random_number(probability)
+        if (probability < exp(-dE / temperature)) then
+            ! accept and perform the swap
+            placeholder = selected(i_remove)
+            selected(i_remove) = not_selected(i_add)
+            not_selected(i_add) = placeholder
+            ! update mask
+            selected_mask(selected(i_remove)) = .true.
+            selected_mask(not_selected(i_add)) = .false.
+            energy = energy + dE
+            acceptance_rate = acceptance_rate + 1
+        end if
+    end do sampling
+    print *, 'acceptance rate: ', acceptance_rate/(10*L)
+    print *, 'done!'
 
     call cpu_time(time_finish)
-    print *, 'annealing time: ', time_finish - time_start, 's'
+    print *, 'sampling time: ', time_finish - time_start, 's'
 
     ! final sanity check
     print *, 'quick sanity check...'
@@ -111,14 +107,4 @@ program adder
     print *, 'expected: ', &
         total_energy(self_distance, cross_distance, selected_mask)
     
-    ! print out selections
-    print *, 'selected indices (starting from 0, for python):'
-    do i = 1, number_to_select
-        print *, selected(i) - 1
-    end do
-    print *, 'selected data:'
-    do i = 1, number_to_select
-        print *, candidate(:,selected(i))
-    end do
-
-end program adder
+end program short_adder
