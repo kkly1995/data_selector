@@ -32,8 +32,8 @@ program selector
     print *, 'standard scaling of data complete!'
 
     allocate(distance(N,N))
-    call self_table(scaled, distance)
-    print *, 'calculation of distances complete!'
+    call self_energy(scaled, distance)
+    print *, 'calculation of energies complete!'
 
     allocate(selected_mask(N))
     allocate(selected(number_to_select))

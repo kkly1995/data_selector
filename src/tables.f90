@@ -11,7 +11,25 @@ module tables
             ! x is an array of size (M, N)
             ! representing N data points in M-dimensional space
             ! y is an array of size (N, N)
-            ! where y(i,j) represents the RECIPROCAL of the euclidean distance
+            ! where y(i,j) represents euclidean distance
+            ! between x(i) and x(j)
+            real(dp), intent(in)        :: x(:,:)
+            real(dp), intent(in out)    :: y(:,:)
+            integer                     :: N, i, j
+
+            N = size(x, dim=2)
+            y = 0
+            do j = 1, N
+                do i = 1, j - 1
+                    y(i,j) = norm2(x(:,i) - x(:,j))
+                    y(j,i) = y(i,j)
+                end do
+            end do
+        end subroutine self_table
+
+        subroutine self_energy(x, y)
+            ! same as self_table but calculates an energy instead
+            ! i.e. y(i,j) represents the RECIPROCAL of the euclidean distance
             ! between x(i) and x(j)
             !
             ! note: if x(i) and x(j) are sufficiently close,
@@ -36,16 +54,34 @@ module tables
                 end do
             end do
             !$omp end parallel do
-        end subroutine self_table
+        end subroutine self_energy
 
         subroutine cross_table(x, y, z)
             ! computes distances between two sets of data points x and y
             ! x has size (M, N)
             ! y has size (M, L), i.e. data has same dimension
             ! z has size (N, L) and will store the final table
-            ! z(i,j) represents the reciprocal distance between x(:,i) and y(:,j)
+            ! z(i,j) represents the distance between x(:,i) and y(:,j)
+            real(dp), intent(in)        :: x(:,:), y(:,:)
+            real(dp), intent(in out)    :: z(:,:)
+            
+            integer                     :: N, L, i, j
+
+            N = size(x, dim=2)
+            L = size(y, dim=2)
+            do i = 1, N
+                do j = 1, L
+                    z(i,j) = norm2(x(:,i) - y(:,j))
+                end do
+            end do
+        end subroutine cross_table
+
+        subroutine cross_energy(x, y, z)
+            ! same as cross_table but computes energy instead
+            ! e.g. z(i,j) represents the reciprocal distance between
+            ! x(:,i) and y(:,j)
             !
-            ! again, these two points are suffciently close, 
+            ! again, if these two points are suffciently close, 
             ! their entry will be set to large_number
             real(dp), intent(in)        :: x(:,:), y(:,:)
             real(dp), intent(in out)    :: z(:,:)
@@ -67,7 +103,7 @@ module tables
                 end do
             end do
             !$omp end parallel do
-        end subroutine cross_table
+        end subroutine cross_energy
 
         function total_self_energy(x, indices) result(E)
             ! calculates total energy for a selected set of data points

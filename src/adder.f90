@@ -47,8 +47,8 @@ program adder
 
     allocate(self_distance(L,L))
     allocate(cross_distance(N,L))
-    call self_table(candidate_scaled, self_distance)
-    call cross_table(initial_scaled, candidate_scaled, cross_distance)
+    call self_energy(candidate_scaled, self_distance)
+    call cross_energy(initial_scaled, candidate_scaled, cross_distance)
     print *, 'calculation of distances complete!'
 
     allocate(selected_mask(L))
